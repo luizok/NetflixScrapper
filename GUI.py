@@ -9,9 +9,16 @@ import sys
 
 import utils
 
-EVENT = Event()
 
-def newLoginWindow(webDriver=None, event=None):
+EVENT = Event()
+WEB_DRIVER = None
+
+STATUS_ERROR = Gdk.Color(0xb7b7, 0x4343, 0x1616)
+STATUS_WARN = Gdk.Color(0xf2f2, 0xeaea, 0x4f4f)
+STATUS_SUCCESS = Gdk.Color(0, 0x8080, 0)
+
+
+def newLoginWindow(event=None):
     global EVENT
     EVENT = event
     print(current_thread().getName() + " E = " + str(hex(id(event))))
@@ -19,7 +26,7 @@ def newLoginWindow(webDriver=None, event=None):
     win.init()
 
 
-def newScrappWindow(webDriver=None, event=None):
+def newScrappWindow(event=None):
     event.wait()
     print(current_thread().getName() + " E = " + str(hex(id(event))))
     win = ScrappWindow()
@@ -179,18 +186,22 @@ class LoginWindow(Gtk.Window):
 
     def btnClicked(self, widget):
         global EVENT
+        global WEB_DRIVER
+        global STATUS_WARN
 
         if widget.get_name() == "movie": # Ainda não fiz os das séries           
             user = self.inpNetflixUser.get_text()
             pswd = self.inpNetflixPass.get_text()
 
-            logged, driver = utils.netflixLoginValidator(user, pswd, True)
+            isLogged, WEB_DRIVER = utils.netflixLoginValidator(user, pswd)
 
-            if logged:
+            if isLogged:
                 EVENT.set()
                 sleep(.5)
                 self.destroy()
-                # cria uma nova janela para o scrap
+            else:
+                self.lblStatus.set_label("Usuário não encontrado")
+                self.lblStatus.modify_fg(Gtk.StateType.NORMAL, STATUS_WARN)
 
     # TEMP
     def comboChanged(self, widget):
@@ -200,14 +211,16 @@ class LoginWindow(Gtk.Window):
 
 
     def checkConnection(self, widget):
+        global STATUS_ERROR
+        global STATUS_SUCCESS
 
         label = "Sem Conexão"
-        color = Gdk.Color(0xffff, 0x7777, 0)
+        color = STATUS_ERROR
         status = False
         
         if utils.networkIsAvailable():
             label = "Pronto"
-            color = Gdk.Color(0, 0x8080, 0)
+            color = STATUS_SUCCESS
             status = True
    
         self.lblStatus.modify_fg(Gtk.StateType.NORMAL, color)

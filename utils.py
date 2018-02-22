@@ -5,6 +5,7 @@ except:
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from time import sleep
 
 
 def networkIsAvailable():
@@ -20,15 +21,36 @@ def networkIsAvailable():
         return False
 
 
-def netflixLoginValidator(user, pswd, debug=False):
-    # TODO criar função para validar o login
-    url = "netflix.com"
+def netflixLoginValidator(user, pswd):
+    isLogged = False
+    url = "https://www.netflix.com/br/login"
     opt = Options()
-    opt.add_argument('-headless')
+    opt.add_argument('--start-maximized')
+    # opt.add_argument('-headless')
 
     driver = webdriver.Chrome(chrome_options=opt)
+    driver.get(url)
+    
+    driver.find_element_by_id("email").send_keys(user)
+    driver.find_element_by_id("password").send_keys(pswd)
+    driver.find_element_by_xpath(
+        '//*[@id="appMountPoint"]/div/div[2]/div/div/form[1]/button'
+    ).click()
 
-    return debug, driver
+    if driver.current_url == "https://www.netflix.com/browse":
+        isLogged = True
+        #TODO implementar uma janela para escolher o perfil deseja
+        driver.find_element_by_xpath(
+            '//*[@id="appMountPoint"]/div/div/div[2]/div/div/ul/li[2]'
+        ).click()
+        sleep(3)
+        driver.get('https://www.netflix.com/browse/genre/34399?so=az')
+
+    else:
+        driver.close()
+        driver = None
+
+    return isLogged, driver
 
 
 
