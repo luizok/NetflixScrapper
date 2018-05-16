@@ -41,9 +41,9 @@ def netflixLoginValidator(user, pswd):
         isLogged = True
         #TODO implementar uma janela para escolher o perfil deseja
         driver.find_element_by_xpath(
-            '//*[@id="appMountPoint"]/div/div/div[2]/div/div/ul/li[2]'
+            '//*[@id="appMountPoint"]/div/div/div/div[2]/div/div/ul/li[2]/div/a/div/div'
         ).click()
-        sleep(3)
+        sleep(1.5) # depende da velocidade da internet
         driver.get('https://www.netflix.com/browse/genre/34399?so=az')
 
     else:

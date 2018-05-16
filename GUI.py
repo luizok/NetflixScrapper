@@ -18,27 +18,29 @@ STATUS_WARN = Gdk.Color(0xf2f2, 0xeaea, 0x4f4f)
 STATUS_SUCCESS = Gdk.Color(0, 0x8080, 0)
 
 
-def newLoginWindow(event=None):
+def newLoginWindow(loginEvent=None):
     global EVENT
-    EVENT = event
-    print(current_thread().getName() + " E = " + str(hex(id(event))))
+    EVENT = loginEvent
+    print(current_thread().getName() + " loginEvent = " + str(hex(id(EVENT))))
     win = LoginWindow()
     win.init()
 
 
-def newScrappWindow(event=None):
-    event.wait()
-    print(current_thread().getName() + " E = " + str(hex(id(event))))
+def newScrappWindow(loginEvent=None, loadedEvent=None, queue=None):
+    global EVENT
+    loginEvent.wait()
+    print(current_thread().getName() + " loginEvent = " + str(hex(id(EVENT))))
+
+    EVENT = loadedEvent
+    print(current_thread().getName() + " loadedEvent = " + str(hex(id(EVENT))))
     win = ScrappWindow()
     win.init()
 
 
 class ScrappWindow(Gtk.Window):
     #TODO Criar a janela do Scrapp
-    def __init__(self, webDriver=None):
+    def __init__(self, queue=None):
         super().__init__(title="Netflix Scrapper")
-
-        self.webDriver = webDriver
         
         self.set_size_request(460, 230)
         self.set_resizable(False)
@@ -61,6 +63,9 @@ class ScrappWindow(Gtk.Window):
     
     
     def init(self):
+        global EVENT
+        EVENT.wait()
+
         self.show_all()
         Gtk.main()
 
@@ -181,7 +186,6 @@ class LoginWindow(Gtk.Window):
 
     def exitFunc(self, some, thing):
         Gtk.main_quit()
-        sys.exit()
 
 
     def btnClicked(self, widget):
@@ -198,7 +202,7 @@ class LoginWindow(Gtk.Window):
             if isLogged:
                 EVENT.set()
                 sleep(.5)
-                self.destroy()
+                self.close()
             else:
                 self.lblStatus.set_label("Usuário não encontrado")
                 self.lblStatus.modify_fg(Gtk.StateType.NORMAL, STATUS_WARN)

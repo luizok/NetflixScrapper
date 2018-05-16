@@ -7,15 +7,17 @@ from queue import Queue
 
 if __name__ == "__main__":
     webDriver = None
-    e = Event()
+    loginEvent = Event()
+    loadedEvent = Event()
     q = Queue()
 
-    print(current_thread().getName() + " E = " + str(hex(id(e))))
+    print(current_thread().getName() + " loginEvent = " + str(hex(id(loginEvent))))
+    print(current_thread().getName() + " loadedEvent = " + str(hex(id(loadedEvent))))
 
-    thrLogin = Thread(name='thrLogin', target=newLoginWindow, args=(e,))
-    thrInfos = Thread(name='thrInfos', target=newScrappWindow, args=(e,))
-    thrScrapper = Thread(name='thrScrapper', target=startScrapping, args=(e, q))
+    thrLogin = Thread(name='thrLogin', target=newLoginWindow, args=(loginEvent,))
+    thrScrapper = Thread(name='thrScrapper', target=startScrapping, args=(loginEvent, loadedEvent, q))
+    thrInfos = Thread(name='thrInfos', target=newScrappWindow, args=(loginEvent, loadedEvent, q))
 
     thrLogin.start()
-    thrInfos.start()
     thrScrapper.start()
+    thrInfos.start()
