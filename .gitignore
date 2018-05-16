@@ -1,4 +1,5 @@
 *.pyc
 __pycache__
 changelog
+netflix_movie_source_template.html
 src.txt

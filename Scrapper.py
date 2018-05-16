@@ -1,6 +1,12 @@
 from threading import current_thread
 from time import sleep
 from selenium.webdriver.common.keys import Keys
+from queue import Queue
+
+#TODO Quando o looping estiver otimizado,criar uma innerQueue que a medida que 
+# os movieSources forem sendo adicionados na innerQueue (ou vetor moviesSource),
+# uma thread interna vai adicionando as informações do filme ja tratadas na queue
+# principalmente
 
 def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
     loginEvent.wait() 
@@ -9,8 +15,6 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
 
     print(current_thread().getName() + " loginEvent = " + str(hex(id(loginEvent))))
     print(current_thread().getName() + " URL = " + WEB_DRIVER.current_url)
-    # print(100*"#")
-    # print(WEB_DRIVER.page_source)
     print(100*"#")
 
     previous_html = ""
@@ -30,7 +34,7 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
     for sMovie in moviesSource:
         tag_a = sMovie.find_element_by_tag_name('a')
         name = tag_a.get_attribute('aria-label')
-        link = tag_a.get_attribute('href').split('?')[0]
+        link = tag_a.get_attribute('href').split('?')[0].replace('watch', 'title')
         print(name + " : " + link)
 
     loadedEvent.set()
