@@ -196,7 +196,7 @@ class LoginWindow(Gtk.Window):
         if widget.get_name() == "movie": # Ainda não fiz os das séries           
             user = self.inpNetflixUser.get_text()
             pswd = self.inpNetflixPass.get_text()
-
+            
             isLogged, WEB_DRIVER = utils.netflixLoginValidator(user, pswd)
 
             if isLogged:

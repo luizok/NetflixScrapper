@@ -5,6 +5,7 @@ except:
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import os
 from time import sleep
 
 
@@ -22,27 +23,34 @@ def networkIsAvailable():
 
 
 def netflixLoginValidator(user, pswd):
+
     isLogged = False
     url = "https://www.netflix.com/br/login"
     opt = Options()
     opt.add_argument('--start-maximized')
+    opt.add_argument('user-data-dir=netflix_cache')
     # opt.add_argument('-headless')
 
     driver = webdriver.Chrome(chrome_options=opt)
     driver.get(url)
     
-    driver.find_element_by_id("email").send_keys(user)
-    driver.find_element_by_id("password").send_keys(pswd)
-    driver.find_element_by_xpath(
-        '//*[@id="appMountPoint"]/div/div[2]/div/div/form[1]/button'
-    ).click()
+    if not os.path.exists('netflix_cache'):
+        driver.find_element_by_id("email").send_keys(user)
+        driver.find_element_by_id("password").send_keys(pswd)
+        driver.find_element_by_xpath(
+            '//*[@id="appMountPoint"]/div/div[2]/div/div/form[1]/button'
+        ).click()
 
     if driver.current_url == "https://www.netflix.com/browse":
         isLogged = True
         #TODO implementar uma janela para escolher o perfil deseja
-        driver.find_element_by_xpath(
-            '//*[@id="appMountPoint"]/div/div/div/div[2]/div/div/ul/li[2]/div/a/div/div'
-        ).click()
+        
+        try:
+            driver.find_element_by_xpath(
+                '//*[@id="appMountPoint"]/div/div/div/div[2]/div/div/ul/li[2]/div/a/div/div'
+            ).click()
+        except Exception as e:
+            print("ERROR: " + str(e))
         sleep(1.5) # depende da velocidade da internet
         driver.get('https://www.netflix.com/browse/genre/34399?so=az')
 
