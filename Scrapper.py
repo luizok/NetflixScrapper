@@ -1,6 +1,7 @@
 from threading import current_thread
 from time import sleep
 import requests
+import os
 from bs4 import BeautifulSoup as bs
 from selenium.webdriver.common.keys import Keys
 from queue import Queue
@@ -34,8 +35,6 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
     #TODO criar o Scrapper
     from GUI import WEB_DRIVER   
 
-    print(current_thread().getName() + " loginEvent = " + str(hex(id(loginEvent))))
-    print(current_thread().getName() + " URL = " + WEB_DRIVER.current_url)
     print(100*"#")
 
     MAIN_URL = 'https://www.netflix.com'
@@ -70,9 +69,22 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
         print('OK')
         break
 
-    moviesSources = sorted(moviesSources, key=lambda s: s.find('a')['aria-label'])
-    print("TAMANHAO TOTAL = " + str(len(moviesSources)))
-    print('STATUS: Start to get information... ', end='', flush=True)
+    allSources = sorted(moviesSources, key=lambda s: s.find('a')['aria-label'])
+    auxSet = set()
+    moviesSources = []
+
+    for s in allSources:
+        if s not in auxSet:
+            auxSet.add(s)
+            moviesSources.append(s)
+    
+    del auxSet
+
+    print('STATUS: Starting to get information... ')
+
+    FOLDER_NAME = 'netflix_miniatures'
+    if not os.path.exists(FOLDER_NAME):
+        os.mkdir(FOLDER_NAME)
 
     for i, sMovie in enumerate(moviesSources):
         tag_a = sMovie.find('a')
@@ -80,12 +92,14 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
         link = tag_a['href'].split('?')[0].replace('watch', 'title')
         imgLink = getImageLink(tag_a.find('div', {'class': 'video-artwork'}))
         print(name + " : " + MAIN_URL + link)
-        imgFile = open(imgLink.split('/')[-1], 'wb')
-        imgFile.write(requests.get(imgLink).content)
-        imgFile.close()
 
-        if i % 10 == 0 and i != 0:
-            input()
+        fileName = name.replace(' ', '_').replace('/', "'")+'.'+imgLink.split('/')[-1].split('.')[1]
+        with open(FOLDER_NAME + '/' + fileName, 'wb') as imgFile:
+            imgFile.write(requests.get(imgLink).content)
+            imgFile.close()
+
+        # if i % 10 == 0 and i != 0:
+        #     input()
 
 
     loadedEvent.set()

@@ -179,7 +179,9 @@ class LoginWindow(Gtk.Window):
     def init(self):
         self.show_all()
         self.set_keep_above(True)
+        print('STATUS: Waiting for login...', end='', flush=True)
         Gtk.main()
+        
 
 
     def exitFunc(self, some, thing):
@@ -191,10 +193,12 @@ class LoginWindow(Gtk.Window):
         global WEB_DRIVER
         global STATUS_WARN
 
-        if widget.get_name() == "movie": # Ainda não fiz os das séries           
+        if widget.get_name() == "movie": # Ainda não fiz os das séries
+            print('OK')           
             user = self.inpNetflixUser.get_text()
             pswd = self.inpNetflixPass.get_text()
             
+            print('STATUS: Checking login...' , end='', flush=True)
             isLogged, WEB_DRIVER = utils.netflixLoginValidator(user, pswd)
 
             if isLogged:
@@ -202,6 +206,8 @@ class LoginWindow(Gtk.Window):
                 sleep(.5)
                 self.close()
             else:
+                print('\nERROR: User not found')
+                print('STATUS: Waiting for login...', end='', flush=True)
                 self.lblStatus.set_label("Usuário não encontrado")
                 self.lblStatus.modify_fg(Gtk.StateType.NORMAL, STATUS_WARN)
 
