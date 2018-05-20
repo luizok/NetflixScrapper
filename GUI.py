@@ -21,7 +21,6 @@ STATUS_SUCCESS = Gdk.Color(0, 0x8080, 0)
 def newLoginWindow(loginEvent=None):
     global EVENT
     EVENT = loginEvent
-    print(current_thread().getName() + " loginEvent = " + str(hex(id(EVENT))))
     win = LoginWindow()
     win.init()
 
@@ -29,10 +28,8 @@ def newLoginWindow(loginEvent=None):
 def newScrappWindow(loginEvent=None, loadedEvent=None, queue=None):
     global EVENT
     loginEvent.wait()
-    print(current_thread().getName() + " loginEvent = " + str(hex(id(EVENT))))
 
     EVENT = loadedEvent
-    print(current_thread().getName() + " loadedEvent = " + str(hex(id(EVENT))))
     win = ScrappWindow()
     win.init()
 
@@ -83,7 +80,7 @@ class LoginWindow(Gtk.Window):
         
         self.set_size_request(460, 230)
         self.set_resizable(False)
-        self.set_position(Gtk.WindowPosition.CENTER)
+        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
         self.connect('delete-event', self.exitFunc)
 
         self.modify_fg(Gtk.StateType.NORMAL, Gdk.Color(0xffff,0,0))
@@ -181,6 +178,7 @@ class LoginWindow(Gtk.Window):
 
     def init(self):
         self.show_all()
+        self.set_keep_above(True)
         Gtk.main()
 
 

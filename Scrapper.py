@@ -1,5 +1,6 @@
 from threading import current_thread
 from time import sleep
+import requests
 from bs4 import BeautifulSoup as bs
 from selenium.webdriver.common.keys import Keys
 from queue import Queue
@@ -11,6 +12,21 @@ from queue import Queue
 
 def fixupFirstMovie(firstMovie):
     return None
+
+
+def normalizeImageURL(div):
+    link = div['style'].split('https://')[1]
+    idx = link.index(')')
+
+    if link[idx-1] != '"': # link[idx-1] != "
+        link = link[:idx] + '"' + link[idx:]
+    
+    return 'https://' + link.split('"')[0]
+
+
+def getImageLink(div):
+    return normalizeImageURL(div)
+
 
 
 def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
@@ -26,7 +42,7 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
     previous_html = ""
     current_html = WEB_DRIVER.page_source
 
-    #Faça um scroll na página até o alcançar todos os filmes
+    #Faça um scroll na página até alcançar todos os filmes
     #TODO otimizar esse looping
     moviesSources = []
 
@@ -42,6 +58,7 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
             WEB_DRIVER.execute_script("window.scrollTo(0,document.body.scrollHeight);")
             sleep(1.2) # Pode variar de acordo com a velocidade da internet
             current_html = WEB_DRIVER.page_source
+            break
 
         print('OK')           
 
@@ -51,18 +68,25 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
                 WEB_DRIVER.find_elements_by_class_name('slider-item'))
         )        
         print('OK')
+        break
 
     moviesSources = sorted(moviesSources, key=lambda s: s.find('a')['aria-label'])
     print("TAMANHAO TOTAL = " + str(len(moviesSources)))
     print('STATUS: Start to get information... ', end='', flush=True)
-    input()
-    for sMovie in moviesSources:
+
+    for i, sMovie in enumerate(moviesSources):
         tag_a = sMovie.find('a')
         name = tag_a['aria-label']
         link = tag_a['href'].split('?')[0].replace('watch', 'title')
+        imgLink = getImageLink(tag_a.find('div', {'class': 'video-artwork'}))
         print(name + " : " + MAIN_URL + link)
+        imgFile = open(imgLink.split('/')[-1], 'wb')
+        imgFile.write(requests.get(imgLink).content)
+        imgFile.close()
 
-    
+        if i % 10 == 0 and i != 0:
+            input()
+
 
     loadedEvent.set()
     
