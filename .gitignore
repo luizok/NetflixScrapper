@@ -3,3 +3,4 @@ __pycache__
 netflix_movie_source_template.html
 test.py
 netflix_cache
+netflix_miniatures
