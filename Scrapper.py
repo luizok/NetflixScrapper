@@ -1,15 +1,18 @@
-from threading import Thread, active_count
-from time import sleep
-import requests
+# STANDARD PACKAGES IN PYTHON 3.X
 import os
 import sys
+import shutil
+import sqlite3
+from time import sleep
+from threading import Thread, active_count
+
+# 3RD PACKAGES
+import requests
 from bs4 import BeautifulSoup as bs
 from selenium import webdriver
-from selenium.webdriver.remote.errorhandler import ErrorHandler
 from selenium.webdriver.chrome.options import Options
-from queue import Queue
-import sqlite3
-import shutil
+
+# LOCAL PACKAGES
 import config
 
 #TODO Quando o looping estiver otimizado,criar uma innerQueue que a medida que 
@@ -18,11 +21,11 @@ import config
 # principalmente
 
 
-def fixupFirstMovie(firstMovie):
+def fixup_first_movie(firstMovie):
     return None
 
 
-def normalizeImageURL(div):
+def normalize_image_url(div):
     link = div['style'].split('https://')[1]
     idx = link.index(')')
 
@@ -32,23 +35,20 @@ def normalizeImageURL(div):
     return 'https://' + link.split('"')[0]
 
 
-def getImageLink(div):
-    return normalizeImageURL(div)
+def get_image_link(div):
+    return normalize_image_url(div)
 
 
-def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
+def scrapp_start(loginEvent=None, loadedEvent=None, queue=None):
     loginEvent.wait() 
     #TODO criar o Scrapper
     from GUI import WEB_DRIVER   
 
     print(100*"#")
 
-    previous_html = ""
-    current_html = WEB_DRIVER.page_source
-
     #Faça um scroll na página até alcançar todos os filmes
     #TODO otimizar esse looping
-    moviesSources = []
+    movies_sources = []
 
     for i, so in enumerate(['az', 'za']):
         WEB_DRIVER.get(config.MAIN_URL + '/browse/genre/34399?so=' + so)
@@ -67,23 +67,23 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
         print('OK')           
 
         print('STATUS: Saving innerHTML of all movies...['+str(i+1)+'/2] ', end='', flush=True)
-        moviesSources += list(
+        movies_sources += list(
             map(lambda p : bs(p.get_attribute('innerHTML'), 'html.parser'),
                 WEB_DRIVER.find_elements_by_class_name('slider-item'))
         )        
         print('OK')
         break
 
-    allSources = sorted(moviesSources, key=lambda s: s.find('a')['aria-label'])
-    auxSet = set()
-    moviesSources = []
+    all_sources = sorted(movies_sources, key=lambda s: s.find('a')['aria-label'])
+    aux_set = set()
+    movies_sources = []
 
-    for s in allSources:
-        if s not in auxSet:
-            auxSet.add(s)
-            moviesSources.append(s)
+    for s in all_sources:
+        if s not in aux_set:
+            aux_set.add(s)
+            movies_sources.append(s)
     
-    del auxSet
+    del aux_set
 
     print('STATUS: Starting to get information... ')
 
@@ -91,8 +91,8 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
         os.mkdir(config.FOLDER_NAME)
 
     WEB_DRIVER.close()
-    for i, sMovie in enumerate(moviesSources):
-        t = Thread(target=scrappImage, args=(sMovie,), name='movie_' + str(i))
+    for i, s_movie in enumerate(movies_sources):
+        t = Thread(target=scrapp_image, args=(s_movie,), name='movie_' + str(i))
         t.start()
 
         # MAX_THREADS + gui thread + main thread (prompt)
@@ -102,7 +102,7 @@ def startScrapping(loginEvent=None, loadedEvent=None, queue=None):
     loadedEvent.set()
 
 
-def scrappImage(sMovie):
+def scrapp_image(s_movie):
 
     opt = Options()
     opt.add_argument('user-data-dir=' + config.CACHE_FOLDER)
@@ -110,7 +110,7 @@ def scrappImage(sMovie):
 
     driver = webdriver.Chrome(chrome_options=opt)
 
-    tag_a = sMovie.find('a')
+    tag_a = s_movie.find('a')
     name = tag_a['aria-label']
     link = tag_a['href'].split('?')[0].replace('watch', 'title')
     print("GETTING -> " + name)
@@ -118,13 +118,13 @@ def scrappImage(sMovie):
 
     assert driver.current_url == config.MAIN_URL+link
 
-    imgLink = getImageLink(tag_a.find('div', {'class': 'video-artwork'}))
+    img_link = get_image_link(tag_a.find('div', {'class': 'video-artwork'}))
 
-    fileName = name.replace(' ', '_').replace('/', "'")+'.'+imgLink.split('/')[-1].split('.')[1]
-    with open(config.FOLDER_NAME + '/' + fileName, 'wb') as imgFile:
-        imgFile.write(requests.get(imgLink).content)
-        imgFile.close()
+    filename = name.replace(' ', '_').replace('/', "'")+'.'+img_link.split('/')[-1].split('.')[1]
+    with open(config.FOLDER_NAME + '/' + filename, 'wb') as img_file:
+        img_file.write(requests.get(img_link).content)
+        img_file.close()
     
     driver.close()
-    print("DONE    -> " + name)
+    print( u'\u2713' + "\t-> " + name)
     sys.exit()

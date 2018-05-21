@@ -1,21 +1,18 @@
-try:
-    import httplib
-except:
-    import http.client as httplib
+# STANDARD PACKAGES IN PYTHON 3.X 
+import os
+import shutil
+import sqlite3
+from time import sleep
+import http.client as httplib
 
+# 3TH PACKAGES
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-import os
-import sqlite3
-import shutil
-from time import sleep
+
+# LOCAL PACKAGES
 import config
 
-
-DB_NAME = '.temp.db'
 
 #TODO Verificar se realmente a verificação funciona pra
 # todos os casos.
@@ -30,7 +27,8 @@ DB_NAME = '.temp.db'
     ('lhpuuidh-browse-AERBMHGTKBFRTN7KCFCH2VAGBI-T',)
     ('cL',)  <-netflix's cookies that saves the session """
 
-def alreadyLogged():
+
+def already_logged():
     shutil.copy2(config.CACHE_FOLDER+'/Default/Cookies', config.DB_NAME)
 
     conn = sqlite3.connect(config.DB_NAME)
@@ -45,16 +43,16 @@ def alreadyLogged():
         "('SecureNetflixId', 'NetflixId', 'memclid', 'nfvdid');"
     )
 
-    isLogged = False
+    is_logged = False
     if cursor.fetchone()[0] > 0:
-        isLogged = True
+        is_logged = True
 
     os.remove(config.DB_NAME)
     
-    return isLogged
+    return is_logged
 
 
-def networkIsAvailable():
+def internet_is_on():
     conn = httplib.HTTPConnection("www.google.com.br", timeout=5)
     
     try:
@@ -67,10 +65,10 @@ def networkIsAvailable():
         return False
 
 
-def netflixLoginValidator(user, pswd):
+def login_validator(user, pswd):
 
-    isLogged = False
-    url = "https://www.netflix.com/br/login"
+    is_logged = False
+    url = config.MAIN_URL + '/login'
     opt = Options()
     opt.add_argument('--start-maximized')
     opt.add_argument('user-data-dir=' + config.CACHE_FOLDER)
@@ -81,16 +79,16 @@ def netflixLoginValidator(user, pswd):
 
     XPATH_PROFILE = '//*[@id="appMountPoint"]/div/div/div/div[2]/div/div/ul/li[2]/div/a/div/div'
 
-    if not alreadyLogged():
+    if not already_logged():
         driver.find_element_by_id("email").send_keys(user)
         driver.find_element_by_id("password").send_keys(pswd)
         driver.find_element_by_xpath(
             '//*[@id="appMountPoint"]/div/div[2]/div/div/form[1]/button'
         ).click()
 
-    if driver.current_url == 'https://www.netflix.com/browse':
-        isLogged = True
-        print('OK' if not alreadyLogged() else 'already logged')
+    if driver.current_url == config.MAIN_URL + '/browse':
+        is_logged = True
+        print('OK' if not already_logged() else 'already logged')
 
         #TODO implementar uma janela para escolher o perfil deseja      
         try:
@@ -108,7 +106,7 @@ def netflixLoginValidator(user, pswd):
         driver.close()
         driver = None
 
-    return isLogged, driver
+    return is_logged, driver
 
 
 

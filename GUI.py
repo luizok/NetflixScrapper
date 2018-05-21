@@ -199,7 +199,7 @@ class LoginWindow(Gtk.Window):
             pswd = self.inpNetflixPass.get_text()
             
             print('STATUS: Checking login...' , end='', flush=True)
-            isLogged, WEB_DRIVER = utils.netflixLoginValidator(user, pswd)
+            isLogged, WEB_DRIVER = utils.login_validator(user, pswd)
 
             if isLogged:
                 EVENT.set()
@@ -226,7 +226,7 @@ class LoginWindow(Gtk.Window):
         color = STATUS_ERROR
         status = False
         
-        if utils.networkIsAvailable():
+        if utils.internet_is_on():
             label = "Pronto"
             color = STATUS_SUCCESS
             status = True
