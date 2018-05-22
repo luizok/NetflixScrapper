@@ -3,5 +3,6 @@ FOLDER_NAME = 'netflix_miniatures'
 CACHE_FOLDER = 'netflix_cache'
 MAX_THREADS = 4
 DB_NAME = '.temp.db'
+RETRY_AWAIT_TIME = 3
 
 

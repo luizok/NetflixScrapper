@@ -11,9 +11,11 @@ import requests
 from bs4 import BeautifulSoup as bs
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.webdriver import WebDriver
 
 # LOCAL PACKAGES
 import config
+import utils
 
 #TODO Quando o looping estiver otimizado,criar uma innerQueue que a medida que 
 # os movieSources forem sendo adicionados na innerQueue (ou vetor moviesSource),
@@ -39,10 +41,9 @@ def get_image_link(div):
     return normalize_image_url(div)
 
 
-def scrapp_start(loginEvent=None, loadedEvent=None, queue=None):
-    loginEvent.wait() 
-    #TODO criar o Scrapper
-    from GUI import WEB_DRIVER   
+def start_scrapp(driver: WebDriver, loginEvent=None, loadedEvent=None, queue=None):
+    # loginEvent.wait() 
+    #TODO criar o Scrapper 
 
     print(100*"#")
 
@@ -51,17 +52,17 @@ def scrapp_start(loginEvent=None, loadedEvent=None, queue=None):
     movies_sources = []
 
     for i, so in enumerate(['az', 'za']):
-        WEB_DRIVER.get(config.MAIN_URL + '/browse/genre/34399?so=' + so)
+        driver.get(config.MAIN_URL + '/browse/genre/34399?so=' + so)
         
         previous_html = ""
-        current_html = WEB_DRIVER.page_source
+        current_html = driver.page_source
         
         print('STATUS: Finding all movies on netflix...['+str(i+1)+'/2] ', end='', flush=True)
         while current_html != previous_html:
             previous_html = current_html
-            WEB_DRIVER.execute_script("window.scrollTo(0,document.body.scrollHeight);")
+            driver.execute_script("window.scrollTo(0,document.body.scrollHeight);")
             sleep(1.2) # Pode variar de acordo com a velocidade da internet
-            current_html = WEB_DRIVER.page_source
+            current_html = driver.page_source
             break
 
         print('OK')           
@@ -69,7 +70,7 @@ def scrapp_start(loginEvent=None, loadedEvent=None, queue=None):
         print('STATUS: Saving innerHTML of all movies...['+str(i+1)+'/2] ', end='', flush=True)
         movies_sources += list(
             map(lambda p : bs(p.get_attribute('innerHTML'), 'html.parser'),
-                WEB_DRIVER.find_elements_by_class_name('slider-item'))
+                driver.find_elements_by_class_name('slider-item'))
         )        
         print('OK')
         break
@@ -90,25 +91,21 @@ def scrapp_start(loginEvent=None, loadedEvent=None, queue=None):
     if not os.path.exists(config.FOLDER_NAME):
         os.mkdir(config.FOLDER_NAME)
 
-    WEB_DRIVER.close()
+    driver.close()
     for i, s_movie in enumerate(movies_sources):
         t = Thread(target=scrapp_image, args=(s_movie,), name='movie_' + str(i))
         t.start()
 
         # MAX_THREADS + gui thread + main thread (prompt)
-        while active_count() > config.MAX_THREADS+2:
+        while active_count() > config.MAX_THREADS:
             sleep(.5)
 
-    loadedEvent.set()
+    # loadedEvent.set()
 
 
 def scrapp_image(s_movie):
 
-    opt = Options()
-    opt.add_argument('user-data-dir=' + config.CACHE_FOLDER)
-    opt.add_argument('-headless')
-
-    driver = webdriver.Chrome(chrome_options=opt)
+    driver = utils.generate_webdriver(show=False)
 
     tag_a = s_movie.find('a')
     name = tag_a['aria-label']
