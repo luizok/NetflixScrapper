@@ -44,9 +44,6 @@ def get_image_link(div):
 def start_scrapp(driver: WebDriver, loginEvent=None, loadedEvent=None, queue=None):
     # loginEvent.wait() 
     #TODO criar o Scrapper 
-
-    print(100*"#")
-
     #Faça um scroll na página até alcançar todos os filmes
     #TODO otimizar esse looping
     movies_sources = []
@@ -75,16 +72,8 @@ def start_scrapp(driver: WebDriver, loginEvent=None, loadedEvent=None, queue=Non
         print('OK')
         break
 
-    all_sources = sorted(movies_sources, key=lambda s: s.find('a')['aria-label'])
-    aux_set = set()
-    movies_sources = []
-
-    for s in all_sources:
-        if s not in aux_set:
-            aux_set.add(s)
-            movies_sources.append(s)
-    
-    del aux_set
+    all_sources = sort(movies_sources, key=lambda s: s.find('a')['aria-label'])
+    all_sources = utils.remove_duplicates(all_sources)
 
     print('STATUS: Starting to get information... ')
 
@@ -96,7 +85,6 @@ def start_scrapp(driver: WebDriver, loginEvent=None, loadedEvent=None, queue=Non
         t = Thread(target=scrapp_image, args=(s_movie,), name='movie_' + str(i))
         t.start()
 
-        # MAX_THREADS + gui thread + main thread (prompt)
         while active_count() > config.MAX_THREADS:
             sleep(.5)
 
@@ -118,6 +106,7 @@ def scrapp_image(s_movie):
     img_link = get_image_link(tag_a.find('div', {'class': 'video-artwork'}))
 
     filename = name.replace(' ', '_').replace('/', "'")+'.'+img_link.split('/')[-1].split('.')[1]
+    
     with open(config.FOLDER_NAME + '/' + filename, 'wb') as img_file:
         img_file.write(requests.get(img_link).content)
         img_file.close()

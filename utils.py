@@ -29,7 +29,7 @@ import config
     ('lhpuuidh-browse-AERBMHGTKBFRTN7KCFCH2VAGBI-T',)
     ('cL',)  <-netflix's cookies that saves the session """
 
-# util
+
 def generate_webdriver(show=True):
     opt = Options()
     opt.add_argument('user-data-dir=' + config.CACHE_FOLDER)
@@ -37,7 +37,7 @@ def generate_webdriver(show=True):
 
     return webdriver.Chrome(chrome_options=opt)
 
-# util
+
 def internet_is_on():
     conn = httplib.HTTPConnection("www.google.com.br", timeout=5)
     
@@ -50,7 +50,7 @@ def internet_is_on():
         conn.close()
         return False
 
-# util
+
 def already_logged():
     shutil.copy2(config.CACHE_FOLDER+'/Default/Cookies', config.DB_NAME)
 
@@ -74,7 +74,19 @@ def already_logged():
     
     return is_logged
 
-#util
+
+def remove_duplicates(array: list):
+    aux_set = set()
+    vector = []
+
+    for element in array:
+        if element not in aux_set:
+            aux_set.add(s)
+            vector.append(s)
+
+    return vector
+
+
 def already_in_profile(driver: WebDriver):
 
     try:
