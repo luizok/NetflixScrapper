@@ -32,8 +32,13 @@ import config
 
 def generate_webdriver(show=True):
     opt = Options()
+    opt.add_experimental_option("prefs", {
+        'profile.managed_default_content_settings.images': 2,
+        'profile.managed_default_content_settings.javascript': 0
+    })
+
     opt.add_argument('user-data-dir=' + config.CACHE_FOLDER)
-    opt.add_argument('--start-maximized' if show else '-headless')
+    opt.add_argument('start-maximized' if show else 'headless')
 
     return webdriver.Chrome(chrome_options=opt)
 
@@ -75,26 +80,27 @@ def already_logged():
     return is_logged
 
 
-def remove_duplicates(array: list):
+def remove_duplicates(array: list, comparator):
     aux_set = set()
     vector = []
 
     for element in array:
-        if element not in aux_set:
-            aux_set.add(s)
-            vector.append(s)
+        if comparator(element) not in aux_set:
+            aux_set.add(comparator(element))
+            vector.append(element)
 
     return vector
 
 
-def already_in_profile(driver: WebDriver):
+def already_in_profile(netflixInstance):
 
     try:
-        drop = driver.find_element_by_class_name('account-dropdown-button')
+        drop = netflixInstance.driver.find_element_by_class_name('account-dropdown-button')
         name = drop.find_element_by_tag_name('a').get_property('aria-label')
 
         return True
 
     except NoSuchElementException:
+        print("FALSAO")
         return False
     
