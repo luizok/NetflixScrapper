@@ -1,11 +1,13 @@
 # STANDARD PACKAGES IN PYTHON 3.x
 import os
+import re
 import shutil
 import sqlite3
 from time import sleep
 import http.client as httplib
 
 # 3RD PACKAGES
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.webdriver import WebDriver
@@ -103,4 +105,36 @@ def already_in_profile(netflixInstance):
     except NoSuchElementException:
         print("FALSAO")
         return False
+
+
+def build_filename(img_name, img_link):
+
+    img_ext = img_link.split('/')[-1].split('.')[1]
+    return img_name + '.' + img_ext
+
+
+def safe_movie_name(name):
+    return name.replace(' ', '_') \
+            .replace('/', "'")  
+
+
+def save_movie_miniature(movie_name, img_link):
+
+    filename = build_filename(safe_movie_name(movie_name), img_link)
     
+    with open(config.FOLDER_NAME + '/' + filename, 'wb') as img_file:
+        img_file.write(requests.get(img_link).content)
+        img_file.close()
+    
+
+def parse_date(date):
+
+    hours = re.findall(r'\d+h', date)
+    try: hours = int(hours[0][:-1])
+    except: hours = 0
+
+    mins = re.findall(r'\d+min', date)
+    try: mins = int(mins[0][:-3])
+    except: mins = 0
+
+    return 60 * hours + mins
